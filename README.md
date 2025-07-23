@@ -1,5 +1,5 @@
 # PD-Rank
-This repository contains the code for the paper *Ranking with confidence for large scale comparison data* ([Pre-print](https://arxiv.org/abs/2202.01670))
+This repository contains the code for the paper *Ranking with confidence for large scale comparison data* ([Paper](https://epubs.siam.org/doi/10.1137/22M1495494))
 
 PD-Rank is a method for pairwise ranking aggregation from noisy labels. Given a set of (possibly) noise pairwise comparisons between a set of items, PD-Rank returns a ranked list of the entire item set. PD-Rank scales well with the number of items due to the optimization method employed.
 
