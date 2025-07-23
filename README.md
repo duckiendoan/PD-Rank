@@ -23,13 +23,17 @@ To use PD-Rank follow the following steps
 If you use PD-Rank in your research, please cite the following paper:
 
 ```
-@misc{valdeira2022rankingconfidencelargescale,
-      title={Ranking with Confidence for Large Scale Comparison Data}, 
-      author={Filipa Valdeira and Cláudia Soares},
-      year={2022},
-      eprint={2202.01670},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2202.01670}, 
+
+@article{doi:10.1137/22M1495494,
+author = {Valdeira, Filipa M. and Ferreira, Ricardo and Micheletti, Alessandra and Soares, Cl\'{a}udia},
+title = {Probabilistic Registration for Gaussian Process Three-Dimensional Shape Modelling in the Presence of Extensive Missing Data},
+journal = {SIAM Journal on Mathematics of Data Science},
+volume = {5},
+number = {2},
+pages = {502-527},
+year = {2023},
+doi = {10.1137/22M1495494},
+URL = {https://doi.org/10.1137/22M1495494},
 }
+
 ```
