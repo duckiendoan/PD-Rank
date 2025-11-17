@@ -23,7 +23,7 @@ class Data(object):
 
     def __init__(self, m, n, gt = None, 
                  noise_type = 'constant', noise_level = 0.1, bt_interval = [0,5],
-                 connectivity = 'connected'):
+                 connectivity = 'connected', demo=True):
         
         """ 
             Parameters
@@ -50,12 +50,13 @@ class Data(object):
                 Connectivity type. Options are 'no', 'connected', or 'strongly'. Default is 'connected'.
     
         """ 
-        print(f'Data generation options:')
-        print(f'- Noise: {noise_type}')
-        print(f'- Number of items: {m}')
-        print(f'- Number of comparisons: {n}')
-        print(f'- Bradley-Terry interval: {bt_interval}')
-        print(f'- Connectivity: {connectivity}')
+        if demo:
+            print(f'Data generation options:')
+            print(f'- Noise: {noise_type}')
+            print(f'- Number of items: {m}')
+            print(f'- Number of comparisons: {n}')
+            print(f'- Bradley-Terry interval: {bt_interval}')
+            print(f'- Connectivity: {connectivity}')
         
         
         # Ground truth
@@ -105,6 +106,17 @@ class Data(object):
    
         A = csr_matrix((vals,(ids_row,ids_col)),shape = (n_unq,m))
         return A, w
+
+    def get_A_full(self):
+        # Get the full A matrix
+        rankings = self.get_rankings()
+        n_full = rankings.shape[0]
+        vals = np.concatenate((np.ones(n_full),-1*np.ones(n_full)),axis=0)
+        ids_row = np.concatenate((np.arange(n_full),np.arange(n_full)),axis=0)
+        ids_col = np.concatenate((rankings[:,0],rankings[:,1]),axis=0)
+
+        A_full = csr_matrix((vals,(ids_row,ids_col)),shape = (n_full, self.m))
+        return A_full
     
     def get_P_rel(self):
         P_sum = self.P_abs+self.P_abs.transpose()
@@ -153,7 +165,7 @@ class Data(object):
             largest =G_connected.nodes()
         else:
             if connectivity == 'connected':
-                print('Checking connected components')
+                # print('Checking connected components')
                 tic = timeit.default_timer()
                 largest = max(nx.weakly_connected_components(G), key=len)
             elif connectivity == 'strongly':
@@ -196,10 +208,15 @@ def genNoise(kind,level,x_gt,pairs):
         delta = None
     elif kind == 'BTL':
         diff = abs(np.diff(x_gt[pairs],axis=1))
-        delta= np.exp(-diff)/(1+np.exp(-diff))                    
+        delta= np.exp(-diff)/(1+np.exp(-diff))
+    elif kind == 'random_annotator':
+        # Assign an annotator to each pair with uniform probability
+        # Here level is a numpy array, indicating a different noise level for each annotator
+        n_annotator = level.size
+        delta = np.random.choice(level, size=(n,))
     else:
         raise NotImplementedError('Error: noise option not available! \n Available options: constant, none, BTL')
-    
+
     if delta is not None:
         delta = delta.flatten()
     return delta
@@ -214,10 +231,3 @@ def gen_y_obs(y_true,delta):
         z[noise_proba<delta] = -1 
         y_noise = y_true * z
     return y_noise
-
-
-
-
-
-
-

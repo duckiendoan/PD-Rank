@@ -14,7 +14,10 @@ from itertools import starmap
 ##############################################################################
 
 def func_LSE(x):
-    lse = np.log(1+np.exp(x))
+    # lse = np.log(1+np.exp(x))
+    # For numerical stability
+    a = x.max()
+    lse = a + np.log(np.exp(-a) + np.exp(x-a))
     return lse
 
 def cost_approx(A,w, x, gamma_reg = 1e-5):
