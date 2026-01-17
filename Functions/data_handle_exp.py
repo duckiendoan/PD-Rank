@@ -76,7 +76,8 @@ def apply_noise(y_true, noise):
 
 class DataExp:
     def __init__(self, m, n, gt = None, 
-                 noise_type = 'constant', noise_level = 0.1, bt_interval = [0,5],
+                 noise_type = 'constant', noise_level = 0.1, alllow_conflict = True,
+                 bt_interval = [0,5],
                  connectivity = 'connected', demo=True):
         if gt is None:
             if noise_type == 'BTL':
@@ -92,6 +93,28 @@ class DataExp:
         # Add noise
         annotators, noise = generate_noise(noise_type, noise_level, x, pairs)
         y_noise = apply_noise(y, noise)
+        if not alllow_conflict:
+            pairs_annotators = np.hstack([pairs, annotators.reshape(-1, 1)])
+            unq, counts = np.unique(pairs_annotators, axis=0, return_counts=True)
+            duplicates = unq[counts > 1]
+            noisy = y != y_noise
+            for i in range(duplicates.shape[0]):
+                # Match (pair, annotator) that are duplicated
+                duplicate_pair_match = np.all(pairs_annotators == duplicates[i:i+1], axis=1)
+                # Check the noisy state of these duplicates
+                noisy_duplicate = noisy[duplicate_pair_match]
+                # If there is one noisy entry, all the rest should be noisy as well?
+                # Could be other condition e.g. the number of noisy values prevale?
+                update_to_noisy = np.any(noisy_duplicate)
+                # update_to_noisy = np.sum(noisy_duplicate) >= np.sum(~noisy_duplicate)
+                # print(noisy_duplicate)
+                if update_to_noisy:
+                    # Find the entries which are in these duplicates and not yet noisy
+                    y_noise[duplicate_pair_match & ~noisy] = -y_noise[duplicate_pair_match & ~noisy]
+                else:
+                    # Else flip the noisy to the original
+                    y_noise[duplicate_pair_match & noisy] = -y_noise[duplicate_pair_match & noisy]
+                    
         # Swap so that the item with higher score goes first -> no need to store y
         pairs[y_noise == -1] = np.flip(pairs[y_noise == -1], axis=1)
         # Store annotators for each observation
@@ -140,11 +163,11 @@ class DataExp:
         all_pairs = np.repeat(self.pairs_reduced, self.pairs_weight, axis=0)
 
         n_full = all_pairs.shape[0]
-        vals = np.concatenate((np.ones(n_full),-1*np.ones(n_full)),axis=0)
-        ids_row = np.concatenate((np.arange(n_full),np.arange(n_full)),axis=0)
+        vals = np.concatenate((np.ones(n_full), -1 * np.ones(n_full)), axis=0)
+        ids_row = np.concatenate((np.arange(n_full),np.arange(n_full)), axis=0)
         ids_col = np.concatenate((all_pairs[:,0],all_pairs[:,1]),axis=0)
 
-        A_full = csr_matrix((vals,(ids_row,ids_col)),shape = (n_full, self.m))
+        A_full = csr_matrix((vals, (ids_row, ids_col)), shape = (n_full, self.m))
 
         if return_annotators:
             all_annotators = np.concat([self.annotator_map[tuple(pair)] for pair in self.pairs_reduced])
@@ -183,5 +206,5 @@ class DataExp:
     def adj_matrix_to_pairs(self, adj_matrix):
         x, y = adj_matrix.nonzero()
         w = adj_matrix.data
-        pairs = np.concatenate((x.reshape(-1,1),y.reshape(-1,1)),axis=1)
+        pairs = np.concatenate((x.reshape(-1,1), y.reshape(-1,1)), axis=1)
         return pairs, w    
