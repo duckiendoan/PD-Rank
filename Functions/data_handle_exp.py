@@ -141,11 +141,22 @@ class DataExp:
         
         # Store everything:
         self.m, self.n = new_m, new_n
+        self.noise_type = noise_type
         self.x = x_new
+        self.adj_matrix = adj_matrix
         self.pairs_reduced = new_pairs
         self.pairs_weight = new_weight
         self.annotator_map = new_annotator_map
     
+    def get_P_rel(self):
+        P_sum = self.adj_matrix + self.adj_matrix.transpose()
+        P_sum.data = 1 / P_sum.data
+        P_rel = self.adj_matrix.multiply(P_sum)
+        return P_rel
+
+    def get_rank_diff_matrix(self):
+        return self.adj_matrix - self.adj_matrix.transpose()
+
     def get_Areduced_w(self):
         pairs, w = self.pairs_reduced, self.pairs_weight
         m = self.m
